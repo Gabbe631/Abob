@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%% 
-function id = tnm034(db1_01.jpg) 
+function id = tnm034('db1_01.jpg') 
 % 
 % im: Image of unknown face, RGB-image in uint8 format in the 
 % range [0,255] 
@@ -9,4 +9,5 @@ function id = tnm034(db1_01.jpg)
 % and ?0? for all other faces. 
 % 
 % Your program code. 
+DetectFace('db1_01.jpg')
 %%%%%%%%%%%%%%%%%%%%%%%%%%
