@@ -4,7 +4,7 @@
 FaceDetector = vision.CascadeObjectDetector;
 %I = imread(input_args);
 BB = step(FaceDetector, Im);
-IFaces = insertObjectAnnotation(I, 'rectangle', bboxes, 'Face');   
+IFaces = insertObjectAnnotation(Im, 'rectangle', BB, 'Face');   
 figure, imshow(IFaces), title('Detected faces');
 
 %To detect Mouth
