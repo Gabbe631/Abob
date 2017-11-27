@@ -1,17 +1,17 @@
-  function [ output_args ] = DetectFace( Im )
+  function [ output_args ] = DetectFace( input_args )
 %DETECTFACE Summary of this function goes here
 %   Detailed explanation goes here
-FaceDetector = vision.CascadeObjectDetector;
-%I = imread(input_args);
-BB = step(FaceDetector, Im);
+detector = vision.CascadeObjectDetector;
+I = imread(input_args);
+bboxes = step(detector, I);
 IFaces = insertObjectAnnotation(I, 'rectangle', bboxes, 'Face');   
 figure, imshow(IFaces), title('Detected faces');
 
 %To detect Mouth
 MouthDetect = vision.CascadeObjectDetector('Mouth','MergeThreshold',16);
-BB=step(MouthDetect,IFaces);
+BB=step(MouthDetect,I);
 figure,
-imshow(IFaces); hold on
+imshow(I); hold on
 for i = 1:size(BB,1)
  rectangle('Position',BB(i,:),'LineWidth',4,'LineStyle','-','EdgeColor','r');
 end
@@ -21,8 +21,8 @@ hold off;
 
 %To detect Eyes
 EyeDetect = vision.CascadeObjectDetector('EyePairBig');
-BB=step(EyeDetect,IFaces);
-figure,imshow(IFaces);
+BB=step(EyeDetect,I);
+figure,imshow(I);
 rectangle('Position',BB,'LineWidth',4,'LineStyle','-','EdgeColor','b');
 title('Eyes Detection');
 
