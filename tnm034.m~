@@ -11,7 +11,7 @@ function id = tnm034(Im)
 % and ?0? for all other faces. 
 % 
 % Your program code. 
-%%%%faceDataBase = imageSet('DB1','recursive');
+faceDataBase = imageSet('DB1','recursive');
 DetectFace(Im)
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%
