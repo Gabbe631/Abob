@@ -33,9 +33,10 @@ normimg = uint8((a-minvalue)*255/(maxvalue-minvalue)); %// Cast back to uint8
 Image = imresize(normimg, [320 320]);
 figure;imshow(Image);
 
-[HOGfeatures, viz] = extractHOGFeatures(Image);
+[HOGfeatures, viz] = extractHOGFeatures(CropImage);
 figure; 
 subplot(2,2,1); imshow(Image);title('input');
+figure;
 subplot(2,1,2); plot(viz);title('HOG');
 
 

@@ -10,11 +10,14 @@ BB = step(FaceDetector, Im);
 cropImage = imcrop(Im,BB);
 a = rgb2gray(cropImage);
 
+
 a = double(a); %// Cast to double
 minvalue = min(a(:)); %// Note the change here
 maxvalue = max(a(:)); %// Got rid of superfluous nested min/max calls
 normimg = uint8((a-minvalue)*255/(maxvalue-minvalue)); %// Cast back to uint8
 [rows, columns, numberOfColorChannels] = size(normimg);
+
+
 
 %To detect Eyes, first left eye then right eye
 LEyeDetect = vision.CascadeObjectDetector('LeftEye','MergeThreshold', 50);
