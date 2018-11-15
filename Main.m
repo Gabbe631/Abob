@@ -1,6 +1,7 @@
 %ABOB OMR project, Gabriel Berthold & Jonas Kinnvall
 clc;
-clear all;
+clear;
+close all;
 
 %Read image
 image1 = imread('images_training/le_1_example.jpg');

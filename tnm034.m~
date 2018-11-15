@@ -7,25 +7,21 @@ function strout = tnm034(im)
 % 
 % OMR Project, Abob, Gabriel Berthold & Jonas Kinnvall
 
-%Makes image grayscale then double
-grayimage = mat2gray(im);
-image = im2double(grayimage);
+% Makes image grayscale then double
+image = im2double(im);
 
-%Normalize image
-image2 = image - min(image(:));
-image2 = image / max(image(:));
+%Binarize image and calculate peakvalues of image
+binIm = 1 - imbinarize(image(:,:,1), 0.7);
+h = sum(binIm,2);
 
-image2
+[pks, locs] = findpeaks(h);
 
-%Plot image
-%subplot(1,3,1), imshow(im)
-%subplot(1,3,2), imshow(grayimage)
-%subplot(1,3,3), imshow(image)
+
 
 figure;
-imshow(image2)
-
-
+imshow(binIm)
+figure;
+plot(h, 1:size(h))
 
 end
 

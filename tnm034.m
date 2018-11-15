@@ -10,19 +10,21 @@ function strout = tnm034(im)
 % Makes image grayscale then double
 image = im2double(im);
 
-%grayimage = mat2gray(im);
-%image = im2double(grayimage);
+%Binarize image and calculate peak values of binarized image
+binIm = 1 - imbinarize(image(:,:,1), 0.7);
+h = sum(binIm,2);
+
+[pks, locs] = findpeaks(h);
 
 
-% Normalize image
-image = image - min(image(:));
-image = image / max(image(:));
 
-negIm = max(image(:)) - image;
-% Plot image
-subplot(1,2,1), imshow(image)
-subplot(1,2,2), imshow(negIm)
 
+
+
+% figure;
+% imshow(binIm)
+% figure;
+% plot(h, 1:size(h))
 
 end
 
