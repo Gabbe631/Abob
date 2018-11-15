@@ -1,0 +1,31 @@
+function strout = tnm034(im) 
+% 
+% Im: Inputimage of captured sheet music. Im should be in
+% double format, normalized to the interval [0,1] 
+% strout: The resulting character string of the detected 
+% notes. The string must follow a pre-defined format. 
+% 
+% OMR Project, Abob, Gabriel Berthold & Jonas Kinnvall
+
+%Makes image grayscale then double
+grayimage = mat2gray(im);
+image = im2double(grayimage);
+
+%Normalize image
+image2 = image - min(image(:));
+image2 = image / max(image(:));
+
+image2
+
+%Plot image
+%subplot(1,3,1), imshow(im)
+%subplot(1,3,2), imshow(grayimage)
+%subplot(1,3,3), imshow(image)
+
+figure;
+imshow(image2)
+
+
+
+end
+
