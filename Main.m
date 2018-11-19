@@ -4,8 +4,11 @@ clear;
 close all;
 
 %Read image
-image1 = imread('images_training/le_1_example.jpg');
+im = imread('images_training/le_1_example.jpg');
+% Makes image grayscale then double
+image = im2double(im);
+
 figure;
-imshow(image1);
+imshow(image);
 %Calls function with image1 as only argumentto return string of notes
-strout = tnm034(image1);
+strout = tnm034(image);
