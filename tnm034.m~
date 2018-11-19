@@ -38,12 +38,12 @@ for i=1:size(peakFiltered,1)
     binIm(i,:,:)=0;
     end
     
+    
 end
 
 figure;
 imshow(binIm);
 
-%Fill voids in notes after staff removal
 se = strel('line', 4, 90);
 binImclose = imclose(binIm,se);
 
