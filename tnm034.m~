@@ -31,23 +31,29 @@ peakFiltered = (h>peakThresh);
 %end
 %hold off;
 
-%Scan binaryImage and remove staffs
+o=size(binIm(1,:));
+%Scan binaryImage and remove staffs where there are no notes intersecting 
 for i=1:size(peakFiltered,1)
-    
-    if(peakFiltered(i,1) == 1)
-    binIm(i,:,:)=0;
-    end
-    
-    
+    if(peakFiltered(i,1) == 1 )
+        for j=1:o(1,2)
+            if(binIm(i-1,j,:) == 0)
+                binIm(i,j,:)=0;              
+            end
+        end
+    end 
 end
 
 figure;
 imshow(binIm);
 
-se = strel('line', 4, 90);
-binImclose = imclose(binIm,se);
-
+%Separate chord notes and such
+%se = strel('line', 3, 90);
+%se = strel('rectangle',[3 1]);
+se = zeros(3,3);
+se(:,2)=1;
+binIm = imopen(binIm,se);
 figure;
-imshow(binImclose);
+imshow(binIm);
+%imshow(binIm);
 end
 

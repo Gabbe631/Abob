@@ -31,23 +31,22 @@ peakFiltered = (h>peakThresh);
 %end
 %hold off;
 
-%Scan binaryImage and remove staffs
+%Scan binaryImage and remove staffs where there are no notes intersecting 
+o=size(binIm(1,:));
 for i=1:size(peakFiltered,1)
-    
-    if(peakFiltered(i,1) == 1)
-    binIm(i,:,:)=0;
-    end
-    
+    if(peakFiltered(i,1) == 1 )
+        for j=1:o(1,2)
+            if(binIm(i-1,j,:) == 0)
+                binIm(i,j,:)=0;              
+            end
+        end
+    end 
 end
 
 figure;
 imshow(binIm);
 
-%Fill voids in notes after staff removal
-se = strel('line', 4, 90);
-binImclose = imclose(binIm,se);
 
-figure;
-imshow(binImclose);
+
 end
 
