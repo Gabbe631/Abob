@@ -7,6 +7,12 @@ function strout = tnm034(image)
 % 
 % OMR Project, Abob, Gabriel Berthold & Jonas Kinnvall
 strout = 1;
+
+%Binarize image and calculate rotation to rotate image
+% CALCULATE ROTATION HERE
+%binIm = 1 - imbinarize(image(:,:,1), 0.6);
+
+
 %Binarize image and calculate peak values of binarized image
 binIm = 1 - imbinarize(image(:,:,1), 0.6);
 
@@ -32,23 +38,28 @@ peakFiltered = (h>peakThresh);
 %hold off;
 
 %Scan binaryImage and remove staffs where there are no notes intersecting 
-%o=size(binIm(1,:));
-%for i=1:size(peakFiltered,1)
-%    if(peakFiltered(i,1) == 1 )
-%        for j=1:o(1,2)
-%            if(binIm(i-1,j,:) == 0)
-%                binIm(i,j,:)=0;              
-%            end
-%        end
-%    end 
-%end
+o=size(binIm(1,:));
+for i=1:size(peakFiltered,1)
+    if(peakFiltered(i,1) == 1 )
+        for j=1:o(1,2)
+            if(binIm(i-1,j,:) == 0)
+                binIm(i,j,:)=0;              
+            end
+        end
+    end 
+end
 
-%Remove staves using opening morphological
-se = strel('line', 4, 90);
-binIm = imopen(binIm,se);
 
 figure;
 imshow(binIm);
+
+%Remove staves using opening morphological
+binIm = 1 - imbinarize(image(:,:,1), 0.6);
+se = strel('line', 4, 90);
+binIm1 = imopen(binIm,se);
+
+figure;
+imshow(binIm1);
 
 %Image erosion to separate chord notes close to eachother more
 %USE LATER IF NEEDED
@@ -59,18 +70,18 @@ imshow(binIm);
 %mshow(binIm);
 
 %Erosion followed by dilation with line? structure to only show notes
-se = strel('line', 3, 0);
-binImLine = imclose(binIm,se);
+%se = strel('line', 8, 0);
+%binImLine = imopen(binIm,se);
 
 %Erosion followed by dilation with disk structure to only show notes
 se = strel('disk', 5);
 binImNote = imopen(binIm,se);
 
-figure;
-imshow(binImLine);
+%figure;
+%imshow(binImLine);
 
-figure;
-imshow(binImNote);
+%figure;
+%imshow(binImNote);
 
 end
 
