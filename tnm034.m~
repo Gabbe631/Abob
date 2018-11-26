@@ -80,14 +80,9 @@ binImNote = imopen(binIm,se);
 se = strel('disk', 2);
 binImNote = imerode(binImNote,se);
 
-[rows,columns] = size(binImNote);
 
-%Labels notes in segments
-%noteLabels = bwlabel(binImNote(1:(rows/2), :), 4);
-%noteLabels = noteLabels + bwlabel(binImNote((rows/2):rows, :), 4);
-
-%Labels all notes directly
 noteLabels = bwlabel(binImNote, 4);
+
 
 noteHeads = regionprops(noteLabels, 'centroid')
 noteCents = cat(1, noteHeads.Centroid);
@@ -97,5 +92,9 @@ imshow(binImNote);
 hold on;
 plot(noteCents(:,1), noteCents(:,2), 'b*');
 hold off
+
+figure;
+imshow(binImNote);
+
 end
 
