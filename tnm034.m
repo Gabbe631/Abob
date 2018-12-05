@@ -1,4 +1,4 @@
-function strout = tnm034(image) 
+function strout = tnm034(im) 
 % 
 % Im: Inputimage of captured sheet music. Im should be in
 % double format, normalized to the interval [0,1] 
@@ -8,15 +8,20 @@ function strout = tnm034(image)
 % OMR Project, Abob, Gabriel Berthold & Jonas Kinnvall
 strout = 1;
 
+image = im2double(im);
+
 %Binarize image and calculate rotation to rotate image
 % CALCULATE ROTATION HERE
 %binIm = 1 - imbinarize(image(:,:,1), 0.6);
 
 
 %Binarize image and calculate peak values of binarized image
-binIm = 1 - imbinarize(image(:,:,1), 0.6);
+binIm = 1 - imbinarize(image(:,:,1), 0.7);
 
 h = mean(binIm,2);
+
+figure;
+imshow(binIm);
 
 %Create threshhold value to filter peaks
 peakThresh = mean(h)+ 2* std(h,1);
@@ -24,9 +29,8 @@ peakFiltered = (h>peakThresh);
 
 [pks, locs] = findpeaks(double(peakFiltered));
 
-
-figure;
-imshow(binIm)
+%figure;
+%imshow(binIm)
 
 %plot(h, 1:size(h))
 %figure(); imshow(binIm);
@@ -60,26 +64,15 @@ imshow(binIm);
 %figure;
 %imshow(binIm1);
 
-%Image erosion to separate chord notes close to eachother more
-%USE LATER IF NEEDED
-%se = strel('line', 2, 90);
-%binIm = imerode(binIm,se);
-%
-%figure;
-%mshow(binIm);
-
-%Erosion followed by dilation with line? structure to only show notes
-%se = strel('line', 8, 90);
-%binImLine = imopen(binIm,se);
-
 %Erosion followed by dilation with disk structure to only show notes
 se = strel('disk', 5);
 binImNote = imopen(binIm,se);
 
-%se = strel('disk', 2);
-%binImNote = imerode(binImNote,se);
+se = strel('disk', 2);
+binImNote = imerode(binImNote,se);
 
 [rows,columns] = size(binImNote);
+
 
 %Labels notes in segments
 %noteLabels = bwlabel(binImNote(1:(rows/2), :), 4);
