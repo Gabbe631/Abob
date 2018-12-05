@@ -25,9 +25,8 @@ peakFiltered = (h>peakThresh);
 [pks, locs] = findpeaks(double(peakFiltered));
 
 
-%figure;
-%imshow(binIm)
-%figure;
+figure;
+imshow(binIm)
 
 %plot(h, 1:size(h))
 %figure(); imshow(binIm);
@@ -70,15 +69,15 @@ imshow(binIm);
 %mshow(binIm);
 
 %Erosion followed by dilation with line? structure to only show notes
-se = strel('line', 8, 90);
-binImLine = imopen(binIm,se);
+%se = strel('line', 8, 90);
+%binImLine = imopen(binIm,se);
 
 %Erosion followed by dilation with disk structure to only show notes
 se = strel('disk', 5);
 binImNote = imopen(binIm,se);
 
-se = strel('disk', 2);
-binImNote = imerode(binImNote,se);
+%se = strel('disk', 2);
+%binImNote = imerode(binImNote,se);
 
 [rows,columns] = size(binImNote);
 
@@ -93,6 +92,7 @@ noteHeads = regionprops(noteLabels, 'centroid')
 noteCents = cat(1, noteHeads.Centroid);
 noteCents
 
+figure;
 imshow(binImNote);
 hold on;
 plot(noteCents(:,1), noteCents(:,2), 'b*');
