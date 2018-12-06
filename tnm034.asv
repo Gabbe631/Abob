@@ -16,18 +16,9 @@ image = im2double(im);
 
 
 %Binarize image and calculate peak values of binarized image
-<<<<<<< HEAD
 BinaryImage = 1 - imbinarize(image(:,:,1), 0.7);
-=======
-binIm = 1 - imbinarize(image(:,:,1), 0.7);
->>>>>>> f5cd43fa96e48d67b5c57365b8dd08ea11a31947
-
-
 
 h = mean(BinaryImage,2);
-
-figure;
-imshow(binIm);
 
 %Create threshhold value to filter peaks
 peakThresh = mean(h)+ 2* std(h,1);
@@ -36,7 +27,7 @@ peakFiltered = (h>peakThresh);
 
 [pks, locs] = findpeaks(double(peakFiltered));
 
-<<<<<<< HEAD
+
 [rows,columns] = size(BinaryImage);
 
 nrIm = size(pks,1)/5;
@@ -47,8 +38,8 @@ for(i=1:nrIm)
 binIm = BinaryImage(index1:index2, : );
 
 
-figure;
-imshow(binIm);
+%figure;
+%imshow(binIm);
 
 h2 = mean(binIm,2);
 
@@ -76,8 +67,8 @@ for i=1:size(peakFiltered2,1)
 end
 
 
-figure;
-imshow(binIm);
+%figure;
+%imshow(binIm);
 
 %Remove staves using opening morphological
 %binIm = 1 - imbinarize(image(:,:,1), 0.6);
@@ -107,17 +98,18 @@ noteCents = cat(1, noteHeads.Centroid);
 noteCents;
 
 figure;
-imshow(binImNote);
+imshow(binIm);
 hold on;
 plot(noteCents(:,1), noteCents(:,2), 'b*');
 hold off
 
 
-
-
-
-
-
+for i=1:size(noteCents,1)
+   
+    I = binIm(;
+    
+    
+end
 
 
 index1 = ceil(index1 + (rows/nrIm))

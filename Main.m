@@ -7,8 +7,8 @@ close all;
 im = imread('images_training/le_1_example.jpg');
 % Makes image grayscale then double
 
-figure;
-imshow(im);
+%figure;
+%imshow(im);
 
 %Calls function with image1 as only argumentto return string of notes
 strout = tnm034(im);

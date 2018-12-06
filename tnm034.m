@@ -38,8 +38,8 @@ for(i=1:nrIm)
 binIm = BinaryImage(index1:index2, : );
 
 
-figure;
-imshow(binIm);
+%figure;
+%imshow(binIm);
 
 h2 = mean(binIm,2);
 
@@ -67,8 +67,8 @@ for i=1:size(peakFiltered2,1)
 end
 
 
-figure;
-imshow(binIm);
+%figure;
+%imshow(binIm);
 
 %Remove staves using opening morphological
 %binIm = 1 - imbinarize(image(:,:,1), 0.6);
@@ -97,21 +97,24 @@ noteHeads = regionprops(noteLabels, 'centroid');
 noteCents = cat(1, noteHeads.Centroid);
 noteCents;
 
-figure;
-imshow(binImNote);
-hold on;
-plot(noteCents(:,1), noteCents(:,2), 'b*');
-hold off
+%figure;
+%imshow(binIm);
+%hold on;
+%plot(noteCents(:,1), noteCents(:,2), 'b*');
+%hold off
 
 
+for i=1:size(noteCents,1)
+   
 
+    I = binIm(:,(noteCents(i,1)-10:noteCents(i,1)+25));
+    figure;
+    imshow(I);
+    
+    
+end
 
-
-
-
-
-
-index1 = ceil(index1 + (rows/nrIm))
+index1 = ceil(index1 + (rows/nrIm));
 index2 = floor(index2 + (rows/nrIm));
 
 end
