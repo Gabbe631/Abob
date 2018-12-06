@@ -27,16 +27,16 @@ peakFiltered = (h>peakThresh);
 
 [pks, locs] = findpeaks(double(peakFiltered));
 
-
+%Variables to use in main for-loop
 [rows,columns] = size(BinaryImage);
-
 nrIm = size(pks,1)/5;
 index1 = 1;
 index2 = rows/nrIm;
+
+%Main loop to segment image and process each segment individually
 for(i=1:nrIm)
 
 binIm = BinaryImage(index1:index2, : );
-
 
 %figure;
 %imshow(binIm);
@@ -55,7 +55,6 @@ peakFiltered2 = (h2>peakThresh2);
 %hold off;
 
 %Scan binaryImage and remove staffs where there are no notes intersecting 
-
 for i=1:size(peakFiltered2,1)
     if(peakFiltered2(i,1) == 1 )
         for j=1:columns
@@ -66,50 +65,36 @@ for i=1:size(peakFiltered2,1)
     end 
 end
 
-
 %figure;
 %imshow(binIm);
-
-%Remove staves using opening morphological
-%binIm = 1 - imbinarize(image(:,:,1), 0.6);
-%se = strel('line', 4, 90);
-%binIm1 = imopen(binIm,se);
-
-%figure;
-%imshow(binIm1);
 
 %Erosion followed by dilation with disk structure to only show notes
 se = strel('disk', 5);
 binImNote = imopen(binIm,se);
 
+%Extra erosion to separate notes close to each other
 se = strel('disk', 2);
 binImNote = imerode(binImNote,se);
 
-
-%Labels notes in segments
-%noteLabels = bwlabel(binImNote(1:(rows/2), :), 4);
-%noteLabels = bwlabel(binImNote((rows/2):rows, :), 4);
-
-%Labels all notes directly
+%Label all notes and find location of note heads with regionprops
 noteLabels = bwlabel(binImNote, 4);
 
 noteHeads = regionprops(noteLabels, 'centroid');
 noteCents = cat(1, noteHeads.Centroid);
 noteCents;
 
-%figure;
-%imshow(binIm);
-%hold on;
-%plot(noteCents(:,1), noteCents(:,2), 'b*');
-%hold off
+figure;
+imshow(binIm);
+hold on;
+plot(noteCents(:,1), noteCents(:,2), 'b*');
+hold off
 
-
+%Creating image segment for every note to compare with templates
 for i=1:size(noteCents,1)
    
-
     I = binIm(:,(noteCents(i,1)-10:noteCents(i,1)+25));
     figure;
-    imshow(I);
+    imshow(I); 
     
     
 end
