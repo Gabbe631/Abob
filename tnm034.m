@@ -11,21 +11,21 @@ strout = 1;
 image = im2double(im);
 
 %Binarize image and call calcRotation function to get rotation angle
-rotIm = 1 - imbinarize(image(:,:,1), 0.7);
+binThresh = 0.75;
+rotIm = 1 - imbinarize(image(:,:,1), binThresh);
 
 staffAngle = calcRotation(rotIm);
 %figure();
 %imshow(rotIm);
 
 %Rotate image with calculated angle
-if(staffAngle > 0 || staffAngle < 0)
+if(staffAngle ~= 0)
     image = imrotate(image, -staffAngle, 'bicubic', 'crop');
-    %figure();
-    %imshow(image);
+   
 end
 
 %Binarize image and crop artifacts from rotation
-BinaryImage = 1-imbinarize(image(:,:,1), 0.7);
+BinaryImage = 1-imbinarize(image(:,:,1), binThresh);
 
 cropH = tan(deg2rad(abs(staffAngle))) * size(image,2);
 cropW = tan(deg2rad(abs(staffAngle))) * size(image,1);
@@ -35,91 +35,106 @@ rect = [cropW, cropH, size(BinaryImage, 2) - 2*cropW, size(BinaryImage,1) - 2*cr
 BinaryImage = imcrop(BinaryImage, rect); 
 
 %Calculate peak values of binarized image
-%BinaryImage = 1 - imbinarize(image(:,:,1), 0.7);
-
 h = mean(BinaryImage,2);
 
 %Create threshhold value to filter peaks
+std(h,1);
+mean(h);
 peakThresh = mean(h)+ 2* std(h,1);
 peakFiltered = (h>peakThresh);
 
+figure;
+plot(h)
+hold on;
+plot(peakFiltered)
+
+
 
 [pks, locs] = findpeaks(double(peakFiltered));
-
+size(pks)
 %Variables to use in main for-loop
 [rows,columns] = size(BinaryImage);
+dist = floor((locs(6) - locs(5))/2);
 nrIm = size(pks,1)/5;
-index1 = 1;
-index2 = floor(rows/nrIm);
+lineindex = 1;
 
 %Main loop to segment image and process each segment individually
 for(i=1:nrIm)
 
-binIm = BinaryImage(index1:index2, :);
-
-figure;
-imshow(binIm);
-
-h2 = mean(binIm,2);
-
-peakThresh2 = mean(h2)+ 2* std(h2,1);
-peakFiltered2 = (h2>peakThresh2);
-
-%plot(h, 1:size(h))
-%figure(); imshow(binIm);
-%hold on; 
-%for i=1:size(locs,1)
-%    plot([1;size(image,2)],[locs(i,1);locs(i,1)],'r');
-%end
-%hold off;
-
-%Scan binaryImage and remove staffs where there are no notes intersecting 
-for i=1:size(peakFiltered2,1)
-    if(peakFiltered2(i,1) == 1 )
-        for j=1:columns
-            if(binIm(i-1,j,:) == 0)
-                binIm(i,j,:)=0;              
-            end
+    if((locs(lineindex)-dist)<1)
+        binIm = BinaryImage(1:(locs(lineindex+4)+dist), :); 
+    else
+        if((locs(lineindex+4)+dist)>rows)
+            binIm = BinaryImage((locs(lineindex)-dist):rows, :);
+        else
+            binIm = BinaryImage((locs(lineindex)-dist):(locs((lineindex+4))+dist), :);
         end
-    end 
-end
+    end
+    figure;
+    imshow(binIm);
 
-%figure;
-%imshow(binIm);
+    h2 = mean(binIm,2);
 
-%Erosion followed by dilation with disk structure to only show notes
-se = strel('disk', 5);
-binImNote = imopen(binIm,se);
+    peakThresh2 = mean(h2)+ 2* std(h2,1);
+    peakFiltered2 = (h2>peakThresh2);
 
-%Extra erosion to separate notes close to each other
-se = strel('disk', 2);
-binImNote = imerode(binImNote,se);
+    %plot(h, 1:size(h))
+    %figure(); imshow(binIm);
+    %hold on; 
+    %for i=1:size(locs,1)
+    %    plot([1;size(image,2)],[locs(i,1);locs(i,1)],'r');
+    %end
+    %hold off;
 
-%Label all notes and find location of note heads with regionprops
-noteLabels = bwlabel(binImNote, 4);
+    %Scan binaryImage and remove staffs where there are no notes intersecting 
+    for i=1:size(peakFiltered2,1)
+        if(peakFiltered2(i,1) == 1 )
+            for j=1:columns
+                if(binIm(i-1,j,:) == 0)
+                    binIm(i,j,:)=0;              
+                end
+            end
+        end 
+    end
 
-noteHeads = regionprops(noteLabels, 'centroid');
-noteCents = cat(1, noteHeads.Centroid);
-noteCents;
+    figure;
+    imshow(binIm);
 
-%figure;
-%imshow(binIm);
-%hold on;
-%plot(noteCents(:,1), noteCents(:,2), 'b*');
-%hold off
+    %Erosion followed by dilation with disk structure to only show notes
+    se = strel('disk', 3);
+    binImNote = imopen(binIm,se);
 
-%Creating image segment for every note to compare with templates
-for i=1:size(noteCents,1)
-   
-    I = binIm(:, floor((noteCents(i,1) - 10:noteCents(i,1)+25)));
-    %figure;
-    %imshow(I); 
-    
-    
-end
+    %Extra erosion to separate notes close to each other
+    se = strel('disk', 2);
+    binImNote = imerode(binImNote,se);
+    figure;
+    imshow(binImNote)
+    %Label all notes and find location of note heads with regionprops
+    noteLabels = bwlabel(binImNote, 4);
 
-index1 = ceil(index1 + (rows/nrIm));
-index2 = floor(index2 + (rows/nrIm));
+    noteHeads = regionprops(noteLabels, 'centroid');
+    noteCents = cat(1, noteHeads.Centroid);
+    noteCents;
+
+    figure;
+    imshow(binIm);
+    hold on;
+    plot(noteCents(:,1), noteCents(:,2), 'b*');
+    hold off
+
+    %Creating image segment for every note to compare with templates
+    for i=1:size(noteCents,1)
+
+        I = binIm(:, floor((noteCents(i,1) - 10:noteCents(i,1)+25)));
+%         figure;
+%         imshow(I); 
+
+
+
+
+    end
+
+    lineindex = lineindex+5;
 
 end
 end
