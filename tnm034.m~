@@ -6,119 +6,150 @@ function strout = tnm034(im)
 % notes. The string must follow a pre-defined format. 
 % 
 % OMR Project, Abob, Gabriel Berthold & Jonas Kinnvall
-strout = 1;
+strout = '';
 
 image = im2double(im);
 
+notes = ["G1", "A1", "B1", "C2", "D2", "E2", "F2", "G2", "A2", "B2", "C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4", "D4", "E4"];
+notes = ["E4","D4","C4","B3","A3","G];
 %Binarize image and call calcRotation function to get rotation angle
-rotIm = 1 - imbinarize(image(:,:,1), 0.7);
+binThresh = 0.75;
+rotIm = 1 - imbinarize(image(:,:,1), binThresh);
 
 staffAngle = calcRotation(rotIm);
-figure();
-imshow(rotIm);
+%figure();
+%imshow(rotIm);
 
-if(staffAngle > 0 || staffAngle < 0)
+%Rotate image with calculated angle
+if(staffAngle ~= 0)
     image = imrotate(image, -staffAngle, 'bicubic', 'crop');
-    figure();
-    imshow(image);
 end
 
-%BinaryImage = 1-imbinarize(Im(:,:,1), 0.7);
+%Binarize image and crop artifacts from rotation
+BinaryImage = 1-imbinarize(image(:,:,1), binThresh);
 
-% Crop rotation corner articacts 
-%cropHeight = tan(deg2rad(abs(angle)))*size(I m,2);
-%cropWidth = tan(deg2rad(abs(angle)))*size(Im,1);
-%rect = [cropWidth, cropHeight, size(bw,2)-2*cropWidth, size(bw,1)-2*cropHeight];
+cropH = tan(deg2rad(abs(staffAngle))) * size(image,2);
+cropW = tan(deg2rad(abs(staffAngle))) * size(image,1);
 
-%BinaryImage= imcrop(bw, rect); 
+rect = [cropW, cropH, size(BinaryImage, 2) - 2*cropW, size(BinaryImage,1) - 2*cropH];
 
-%Binarize image and calculate peak values of binarized image
-%BinaryImage = 1 - imbinarize(image(:,:,1), 0.7);
+BinaryImage = imcrop(BinaryImage, rect); 
 
+%Calculate peak values of binarized image
 h = mean(BinaryImage,2);
 
 %Create threshhold value to filter peaks
+std(h,1);
+mean(h);
 peakThresh = mean(h)+ 2* std(h,1);
 peakFiltered = (h>peakThresh);
 
+% figure;
+% plot(h)
+% hold on;
+% plot(peakFiltered)
 
 [pks, locs] = findpeaks(double(peakFiltered));
 
 %Variables to use in main for-loop
 [rows,columns] = size(BinaryImage);
+dist = floor((locs(6) - locs(5))/2);
 nrIm = size(pks,1)/5;
-index1 = 1;
-index2 = floor(rows/nrIm);
+lineindex = 1;
 
 %Main loop to segment image and process each segment individually
 for(i=1:nrIm)
 
-binIm = BinaryImage(index1:index2, :);
-
-%figure;
-%imshow(binIm);
-
-h2 = mean(binIm,2);
-
-peakThresh2 = mean(h2)+ 2* std(h2,1);
-peakFiltered2 = (h2>peakThresh2);
-
-%plot(h, 1:size(h))
-%figure(); imshow(binIm);
-%hold on; 
-%for i=1:size(locs,1)
-%    plot([1;size(image,2)],[locs(i,1);locs(i,1)],'r');
-%end
-%hold off;
-
-%Scan binaryImage and remove staffs where there are no notes intersecting 
-for i=1:size(peakFiltered2,1)
-    if(peakFiltered2(i,1) == 1 )
-        for j=1:columns
-            if(binIm(i-1,j,:) == 0)
-                binIm(i,j,:)=0;              
-            end
+    if((locs(lineindex)-dist)<1)
+        binIm = BinaryImage(1:(locs(lineindex+4)+dist), :); 
+    else
+        if((locs(lineindex+4)+dist)>rows)
+            binIm = BinaryImage((locs(lineindex)-dist):rows, :);
+        else
+            binIm = BinaryImage((locs(lineindex)-dist):(locs((lineindex+4))+dist), :);
         end
-    end 
-end
+    end
+    figure;
+    imshow(binIm);
 
-%figure;
-%imshow(binIm);
+    h2 = mean(binIm,2);
 
-%Erosion followed by dilation with disk structure to only show notes
-se = strel('disk', 5);
-binImNote = imopen(binIm,se);
+    peakThresh2 = mean(h2)+ 2* std(h2,1);
+    peakFiltered2 = (h2>peakThresh2);
+    
+    [staffPks, staffLocs] = findpeaks(double(peakFiltered2));
+    %size(pks2)
+    noteDist = (staffLocs(5) - staffLocs(1))/9;
+    
+    noteLocs  = zeros(1,20);
+    
+    for i=(staffLocs(1)-7*noteDist):noteDist:(staffLocs(5)+6)
+        
+    
 
-%Extra erosion to separate notes close to each other
-se = strel('disk', 2);
-binImNote = imerode(binImNote,se);
+    %plot(h, 1:size(h))
+    %figure(); imshow(binIm);
+    %hold on; 
+    %for i=1:size(locs,1)
+    %    plot([1;size(image,2)],[locs(i,1);locs(i,1)],'r');
+    %end
+    %hold off;
 
-%Label all notes and find location of note heads with regionprops
-noteLabels = bwlabel(binImNote, 4);
+    %Scan binaryImage and remove staffs where there are no notes intersecting 
+    for i=1:size(peakFiltered2,1)
+        if(peakFiltered2(i,1) == 1 )
+            for j=1:columns
+                if(binIm(i-1,j,:) == 0)
+                    binIm(i,j,:)=0;              
+                end
+            end
+        end 
+    end
 
-noteHeads = regionprops(noteLabels, 'centroid');
-noteCents = cat(1, noteHeads.Centroid);
-noteCents;
-
-%figure;
-%imshow(binIm);
-%hold on;
-%plot(noteCents(:,1), noteCents(:,2), 'b*');
-%hold off
-
-%Creating image segment for every note to compare with templates
-for i=1:size(noteCents,1)
-   
-    I = binIm(:,floor((noteCents(i,1)-10:noteCents(i,1)+25)));
     %figure;
-    %imshow(I); 
-    
-    
-end
+    %imshow(binIm);
 
-index1 = ceil(index1 + (rows/nrIm));
-index2 = floor(index2 + (rows/nrIm));
+    %Erosion followed by dilation with disk structure to only show notes
+    se = strel('disk', 4);
+    binImNote = imopen(binIm,se);
 
+    %Extra erosion to separate notes close to each other
+    se = strel('disk', 2);
+    binImNote = imerode(binImNote,se);
+    
+    %figure;
+    %imshow(binImNote)
+    
+    %Label all notes and find location of note heads with regionprops
+    noteLabels = bwlabel(binImNote, 4);
+
+    noteHeads = regionprops(noteLabels, 'centroid');
+    noteCents = cat(1, noteHeads.Centroid);
+    
+
+    %Plot note head positions over binary image
+%     figure;
+%     imshow(binIm);
+%     hold on;
+%     plot(noteCents(:,1), noteCents(:,2), 'b*');
+%     hold off
+
+    %Creating image segment for every note to compare with templates
+    for i=1:size(noteCents,1)
+
+        I = binIm(:, floor((noteCents(i,1)-10:noteCents(i,1)+25)));
+%         figure;
+%         imshow(I); 
+
+        %[m,index] = min(abs(staffLocs-noteCents(i,2)));
+        
+        
+        
+        %strout =[strout, notes(index)];
+
+    end
+    %size(index);
+    lineindex = lineindex+5;
 end
 end
 
