@@ -14,27 +14,25 @@ image = im2double(im);
 rotIm = 1 - imbinarize(image(:,:,1), 0.7);
 
 staffAngle = calcRotation(rotIm);
-%figure();
-%imshow(rotIm);
+figure();
+imshow(rotIm);
 
-%Rotate image with calculated angle
 if(staffAngle > 0 || staffAngle < 0)
     image = imrotate(image, -staffAngle, 'bicubic', 'crop');
-    %figure();
-    %imshow(image);
+    figure();
+    imshow(image);
 end
 
-%Binarize image and crop artifacts from rotation
-BinaryImage = 1-imbinarize(image(:,:,1), 0.7);
+%BinaryImage = 1-imbinarize(Im(:,:,1), 0.7);
 
-cropH = tan(deg2rad(abs(staffAngle))) * size(image,2);
-cropW = tan(deg2rad(abs(staffAngle))) * size(image,1);
+% Crop rotation corner articacts 
+%cropHeight = tan(deg2rad(abs(angle)))*size(I m,2);
+%cropWidth = tan(deg2rad(abs(angle)))*size(Im,1);
+%rect = [cropWidth, cropHeight, size(bw,2)-2*cropWidth, size(bw,1)-2*cropHeight];
 
-rect = [cropW, cropH, size(BinaryImage, 2) - 2*cropW, size(BinaryImage,1) - 2*cropH];
+%BinaryImage= imcrop(bw, rect); 
 
-BinaryImage = imcrop(BinaryImage, rect); 
-
-%Calculate peak values of binarized image
+%Binarize image and calculate peak values of binarized image
 %BinaryImage = 1 - imbinarize(image(:,:,1), 0.7);
 
 h = mean(BinaryImage,2);
@@ -57,8 +55,8 @@ for(i=1:nrIm)
 
 binIm = BinaryImage(index1:index2, :);
 
-figure;
-imshow(binIm);
+%figure;
+%imshow(binIm);
 
 h2 = mean(binIm,2);
 
@@ -111,7 +109,7 @@ noteCents;
 %Creating image segment for every note to compare with templates
 for i=1:size(noteCents,1)
    
-    I = binIm(:, floor((noteCents(i,1) - 10:noteCents(i,1)+25)));
+    I = binIm(:,floor((noteCents(i,1)-10:noteCents(i,1)+25)));
     %figure;
     %imshow(I); 
     

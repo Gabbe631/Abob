@@ -1,0 +1,12 @@
+function [staffAngle] = calcRotation(rotIm)
+%Function to calculate rotation of image
+
+[H, theta, rho] = hough(rotIm);
+
+peak = houghpeaks(H);
+
+staffAngle = theta(peak())
+
+
+end
+
