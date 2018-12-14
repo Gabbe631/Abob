@@ -6,21 +6,14 @@ function strout = tnm034(im)
 % notes. The string must follow a pre-defined format. 
 % 
 %   OMR Project, Abob, Gabriel Berthold & Jonas Kinnvall
-    str = '';
-    %strout = '';
+    strout = '';
     image = im2double(im);
-
-    %Create array of every relevant quarternote
-    qNotes = ["E4","D4","C4","B3","A3","G3","F3","E3","D3","C3","B2","A2","G2","F2","E2","D2","C2","B1","A1","G1"];
-    eNotes = ["e4","d4","c4","b3","a3","g3","f3","e3","d3","c3","b2","a2","g2","f2","e2","d2","c2","b1","a1","g1"];
 
     %Binarize image and call calcRotation function to get rotation angle
     binThresh = 0.75;
     rotIm = 1 - imbinarize(image(:,:,1), binThresh);
 
     staffAngle = calcRotation(rotIm);
-    %figure();
-    %imshow(rotIm);
 
     %Rotate image with calculated angle
     if(staffAngle ~= 0)
@@ -41,15 +34,8 @@ function strout = tnm034(im)
     h = mean(BinaryImage,2);
 
     %Create threshhold value to filter peaks
-    std(h,1);
-    mean(h);
     peakThresh = mean(h)+ 2* std(h,1);
     peakFiltered = (h>peakThresh);
-
-    % figure;
-    % plot(h)
-    % hold on;
-    % plot(peakFiltered)
 
     [pks, locs] = findpeaks(double(peakFiltered));
 
@@ -71,92 +57,134 @@ function strout = tnm034(im)
                 binIm = BinaryImage((locs(lineindex)-dist):(locs((lineindex+4))+dist), :);
             end
         end
-        %figure;
-        %imshow(binIm);
-
+        
+        %Find peaks for segmented image to calculate height of staff
+        %and later note locations
         h2 = mean(binIm,2);
 
         peakThresh2 = mean(h2)+ 2* std(h2,1);
         peakFiltered2 = (h2>peakThresh2);
-
+        
         [staffPks, staffLocs] = findpeaks(double(peakFiltered2));
-        %size(pks2)
+           
+        %Compute distance between staff line and staff space
+        %by taking the distance between first and last staff line and
+        %divide by 9 (5 lines and 4 spaces = 9 locations)
         noteDist = (staffLocs(5) - staffLocs(1))/9;
-
-        noteLocs  = zeros(1,20);
-        nl=1;
-
-        for i=(staffLocs(1)-6*noteDist):noteDist:(staffLocs(5)+5*noteDist)
-           noteLocs(nl)=i;
-           nl=nl+1;
-        end
-
-
-        %plot(h, 1:size(h))
-        %figure(); imshow(binIm);
-        %hold on; 
-        %for i=1:size(locs,1)
-        %    plot([1;size(image,2)],[locs(i,1);locs(i,1)],'r');
-        %end
-        %hold off;
-
+  
         %Scan binaryImage and remove staffs where there are no notes intersecting 
-        for i=1:size(peakFiltered2,1)
-            if(peakFiltered2(i,1) == 1 )
-                for j=1:columns
-                    if(binIm(i-1,j,:) == 0)
-                        binIm(i,j,:)=0;              
+        for k=1:size(staffLocs)
+            for j=(staffLocs(k)-1):(staffLocs(k)+(round(noteDist)/2))
+                for l=1:columns
+                    if(binIm(j-1,l) == 0)
+                         binIm(j,l)=0;
                     end
                 end
-            end 
+            end
         end
-
-        %figure;
-        %imshow(binIm);
-
+        
+        %Array of zeros to be filled with indexes 1-20 corresponding to the
+        %relevant notes of the project
+        noteLocs  = zeros(1,20);
+        
+        nl=1;
+        for k=((staffLocs(1)-6*noteDist)+1.75):noteDist:((staffLocs(5)+5*noteDist)+1.75)
+           noteLocs(nl)=k;
+           nl=nl+1;
+        end
+        
         %Erosion followed by dilation with disk structure to only show notes
-        se = strel('disk', 4);
+        se = strel('disk', round(noteDist));
         binImNote = imopen(binIm,se);
 
         %Extra erosion to separate notes close to each other
-        se = strel('disk', 2);
+        se = strel('disk', round(noteDist/2));
         binImNote = imerode(binImNote,se);
-
-        %figure;
-        %imshow(binImNote)
 
         %Label all notes and find location of note heads with regionprops
         noteLabels = bwlabel(binImNote, 4);
 
         noteHeads = regionprops(noteLabels, 'centroid');
         noteCents = cat(1, noteHeads.Centroid);
+       
+        %Booleans used to detect correct notes
+        beamRight = false;
+        doubleBeam = false;
+        lookUp = false;
+        
 
-
-        %Plot note head positions over binary image
-        figure;
-        imshow(binIm);
-        hold on;
-        plot(noteCents(:,1), noteCents(:,2), 'b*');
-        hold off
-
-        %Creating image segment for every note to compare with templates
-        for i=1:size(noteCents,1)
-
-            I = binIm(:, floor((noteCents(i,1)-10:noteCents(i,1)+25)));
-    %         figure;
-    %         imshow(I); 
-
+        i=1;
+        while i<=size(noteCents,1)
+            
+            %Computing which possible note locations along the staffline
+            %the current note is closes to
             [minDist,index] = min(abs(noteLocs-noteCents(i,2)));
+            
+            %Creating image segment for every note to compare with templates                
+            I = binIm(:, floor((noteCents(i,1)-noteDist:noteCents(i,1)+5*noteDist)));
+            [rowsI, colsI] = size(I);
+            
+            if(floor(noteCents(i,2))<=staffLocs(3))
+                
+                %Look Up in special case, else look down                  
+                if((beamRight == true && lookUp == true) || (ceil(noteCents(i,2)) == staffLocs(3) && (i ~= size(noteCents,1) && min(abs(noteCents(i+1,1)-noteCents(i,1)))<3 && noteCents(i+1)>staffLocs(3))))
+                    
+                    %Segment image even further to look above notehead
+                    temp = I(floor(1:noteCents(i,2)), :);
+                    
+                    %Call function to detect note type above notehead
+                    [str, beamRight2, dBeam, j] = noteDetUp(temp, noteCents, i, noteLocs, index, beamRight, doubleBeam);
 
-            str =[str, qNotes(index)];
+                    beamRight = beamRight2;
+                    doubleBeam = dBeam;
+                    i=j;
+                else
+                    %Segment image even further to look underneath notehead
+                    temp = I(ceil(noteCents(i,2):noteCents(i,2)+9*noteDist), :);
+                    
+                    %Call function to detect note type underneath note head
+                    [str, beamRight2, dBeam j] = noteDetDown(temp, noteCents, i, noteLocs, index, beamRight, doubleBeam);
 
+                    beamRight = beamRight2;
+                    doubleBeam = dBeam;
+                    lookUp = false;
+                    i=j;
+                end
+            elseif(ceil(noteCents(i,2))>staffLocs(3))
+                
+                %Look down in special case, else look up 
+                if(beamRight == true && lookUp == false)
+                    
+                    %Segment image even further to look underneath notehead
+                    temp = I(ceil(noteCents(i,2):rowsI), :);
+                    
+                    %Call function to detect note type underneath note head
+                    [str, beamRight2, dBeam j] = noteDetDown(temp, noteCents, i, noteLocs, index, beamRight, doubleBeam);
+
+                    doubleBeam = dBeam;
+                    beamRight = beamRight2;
+                    i=j;
+                else
+                    %Segment image even further to look above notehead
+                    temp = I(floor(noteCents(i,2)-9*noteDist:noteCents(i,2)), :);
+                    
+                    %Call function to detect note type above note head
+                    [str, beamRight2, dBeam, j] = noteDetUp(temp, noteCents, i, noteLocs, index, beamRight, doubleBeam);
+
+                    beamRight = beamRight2;
+                    doubleBeam = dBeam;
+                    lookUp = true;
+                    i=j;
+                end
+            end
+            strout = [strout, str];
+            i = i+1;
         end
-        str =[str,'n'];
+        strout =[strout,'n'];
         lineindex = lineindex+5;
     end
-    str(1) = [];
-    str(end) = [];
-    %strout = strcat(strout, str);
-    strout = strjoin(str);
+    strout(cellfun('isempty', strout)) = [];
+    strout(end) = [];
+    strout = strjoin(strout, '');
 end
 
